@@ -20,7 +20,7 @@ app.add_middleware(
 
 from pydantic import BaseModel
 from typing import List, Optional
-from rag import search_context, generate_answer, get_embedding
+from rag import search_context, generate_answer, get_embedding, personalize_text, translate_text
 from db import init_db, get_db_connection
 
 # Models
@@ -60,17 +60,17 @@ async def ask_selection(request: SelectionRequest):
 
 @app.post("/rag/personalize")
 async def personalize_content(request: PersonalizeRequest):
-    # In a real app, we'd fetch the chapter content from disk or DB
-    # Here we mock returning a full markdown string
+    personalized_text = personalize_text(request.text, request.level)
     return {
-        "personalized_markdown": f"# Personalized Chapter\n\n**Level:** {request.level}\n\n{request.text}\n\n*Simplified explanation...*",
-        "meta": {"tokens_used": 100}
+        "personalized_markdown": personalized_text,
+        "meta": {"level": request.level}
     }
 
 @app.post("/rag/translate")
 async def translate_content(request: TranslateRequest):
+    translated_text = translate_text(request.text, request.target_language)
     return {
-        "translated_markdown": f"# Translated Chapter (Urdu)\n\n{request.text}\n\n*Urdu translation...*"
+        "translated_markdown": translated_text
     }
 
 from auth import create_user, authenticate_user, User

@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from qdrant_client import QdrantClient
 import psycopg2
 from psycopg2.extras import RealDictCursor

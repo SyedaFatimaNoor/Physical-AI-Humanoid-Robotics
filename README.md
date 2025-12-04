@@ -92,6 +92,7 @@ uvicorn main:app --reload
 ```bash
 cd textbook-frontend
 npm install
+npm install react-markdown
 npm start
 ```
 
@@ -169,10 +170,10 @@ User authentication is implemented using Better-Auth with:
 |----------|--------|--------|
 | Base Functionality | 100 | ✅ Complete |
 | Claude Code Skills | 50 | ✅ Complete |
-| Better-Auth Integration | 50 | 🔄 In Progress |
-| Personalization | 50 | 🔄 In Progress |
-| Urdu Translation | 50 | 🔄 In Progress |
-| **Total** | **300** | **~200/300** |
+| Better-Auth Integration | 50 | ✅ Complete |
+| Personalization | 50 | ✅ Complete |
+| Urdu Translation | 50 | ✅ Complete |
+| **Total** | **300** | **300/300** |
 
 ## 🎥 Demo Video
 

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+    # Reviewgh pages deployments are manually triggered
   workflow_dispatch:
 
 permissions:
@@ -17,37 +18,36 @@ concurrency:
 
 jobs:
   build:
+    name: Build Docusaurus
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: 18
+          cache: npm
           cache-dependency-path: textbook-frontend/package-lock.json
-          
-      - name: Install dependencies
-        working-directory: ./textbook-frontend
+
+      - name: Install Dependencies
         run: npm ci
-        
-      - name: Build website
-        working-directory: ./textbook-frontend
+        working-directory: textbook-frontend
+
+      - name: Build Website
         run: npm run build
-        
-      - name: Upload artifact
+        working-directory: textbook-frontend
+
+      - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./textbook-frontend/build
+          path: textbook-frontend/build
 
   deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

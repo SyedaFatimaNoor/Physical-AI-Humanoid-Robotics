@@ -39,3 +39,13 @@ skills:
       chapter_slug: string
     output_schema:
       chunks_indexed: integer
+
+  - name: Robot Mentor Agent
+    description: A comprehensive agent that can explain topics, generate ROS2 code, URDF, and Gazebo worlds.
+    input_schema:
+      task: string
+      context: string
+    output_schema:
+      explanation: string
+      code_snippets: list[object]
+      files_generated: list[string]

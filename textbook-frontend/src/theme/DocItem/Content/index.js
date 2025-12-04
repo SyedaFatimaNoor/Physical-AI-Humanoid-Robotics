@@ -1,22 +1,32 @@
 import React, { useState } from 'react';
 import Content from '@theme-original/DocItem/Content';
-import { useDoc } from '@docusaurus/theme-common/internal';
+import ReactMarkdown from 'react-markdown';
 
 export default function ContentWrapper(props) {
-    const { metadata } = useDoc();
     const [contentMode, setContentMode] = useState('default'); // default, personalized, urdu
     const [customContent, setCustomContent] = useState(null);
     const [loading, setLoading] = useState(false);
 
     const handlePersonalize = async (mode) => {
         setLoading(true);
+        // We need to get the text content. 
+        // Since we are wrapping Content, we might not have easy access to the raw text prop unless we parse children.
+        // But grabbing from DOM is a reasonable fallback for this "overlay" approach.
+        // However, if we are in "default" mode, the content is rendered.
+        const article = document.querySelector('article');
+        const text = article ? article.innerText : "";
+
+        if (!text) {
+            alert("Could not find content to process");
+            setLoading(false);
+            return;
+        }
+
         try {
             const endpoint = mode === 'urdu' ? 'http://localhost:8000/rag/translate' : 'http://localhost:8000/rag/personalize';
-            const body = {
-                text: "Chapter content placeholder", // In real app, send slug or content
-                level: "beginner", // Mock user level
-                target_language: "Urdu"
-            };
+            const body = mode === 'urdu'
+                ? { text, target_language: "Urdu" }
+                : { text, level: "beginner" };
 
             const response = await fetch(endpoint, {
                 method: 'POST',
@@ -27,7 +37,8 @@ export default function ContentWrapper(props) {
             setCustomContent(data.personalized_markdown || data.translated_markdown);
             setContentMode(mode);
         } catch (error) {
-            alert("Failed to personalize content");
+            console.error(error);
+            alert("Failed to process content. Backend might be offline.");
         } finally {
             setLoading(false);
         }
@@ -35,24 +46,35 @@ export default function ContentWrapper(props) {
 
     return (
         <>
-            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
-                <button onClick={() => setContentMode('default')} disabled={contentMode === 'default'}>
+            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                    className={`button ${contentMode === 'default' ? 'button--secondary' : 'button--outline button--secondary'}`}
+                    onClick={() => setContentMode('default')}
+                    disabled={contentMode === 'default'}
+                >
                     Original
                 </button>
-                <button onClick={() => handlePersonalize('personalized')} disabled={loading}>
-                    {loading && contentMode === 'personalized' ? 'Generating...' : 'Personalize for Me'}
+                <button
+                    className="button button--primary"
+                    onClick={() => handlePersonalize('personalized')}
+                    disabled={loading}
+                >
+                    {loading && contentMode === 'personalized' ? 'Personalizing...' : '✨ Personalize'}
                 </button>
-                <button onClick={() => handlePersonalize('urdu')} disabled={loading}>
-                    {loading && contentMode === 'urdu' ? 'Translating...' : 'Translate to Urdu'}
+                <button
+                    className="button button--info"
+                    onClick={() => handlePersonalize('urdu')}
+                    disabled={loading}
+                >
+                    {loading && contentMode === 'urdu' ? 'Translating...' : '🌐 Translate to Urdu'}
                 </button>
             </div>
 
             {contentMode === 'default' ? (
                 <Content {...props} />
             ) : (
-                <div className="markdown">
-                    {/* In a real app, use a Markdown renderer like react-markdown here */}
-                    <pre style={{ whiteSpace: 'pre-wrap' }}>{customContent}</pre>
+                <div className="markdown" dir={contentMode === 'urdu' ? 'rtl' : 'ltr'} style={{ padding: '20px', border: '1px solid #eee', borderRadius: '8px' }}>
+                    <ReactMarkdown>{customContent}</ReactMarkdown>
                 </div>
             )}
         </>
