@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./rag-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - QDRANT_URL=${QDRANT_URL}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - ./rag-backend:/app
+
+  frontend:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./textbook-frontend:/app
+    command: npm start
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
