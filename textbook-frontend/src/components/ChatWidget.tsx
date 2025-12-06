@@ -1,7 +1,7 @@
 // src/components/ChatWidget.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // Using native fetch instead of axios
-import './ChatWidget.css'; // We'll add minimal styling later
+import './chat.css'; // We'll add minimal styling later
 
 interface Message {
     role: 'user' | 'assistant';
@@ -12,6 +12,23 @@ const ChatWidget: React.FC = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
+    const [selectedText, setSelectedText] = useState<string>('');
+    // Removed duplicate selectedText state
+
+    // Removed duplicate selection effect
+
+    // Capture user text selection for contextual QA
+    React.useEffect(() => {
+        const handleSelection = () => {
+            const selection = window.getSelection();
+            const text = selection ? selection.toString() : '';
+            if (text && text.length > 10) {
+                setSelectedText(text);
+            }
+        };
+        document.addEventListener('mouseup', handleSelection);
+        return () => document.removeEventListener('mouseup', handleSelection);
+    }, []);
 
     const sendMessage = async () => {
         if (!input.trim()) return;
@@ -19,10 +36,13 @@ const ChatWidget: React.FC = () => {
         setMessages((prev) => [...prev, userMsg]);
         setLoading(true);
         try {
+            const body = selectedText
+                ? { query: input || 'Explain this selection', selected_text: selectedText }
+                : { query: input };
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: input })
+                body: JSON.stringify(body)
             });
             const data = await response.json();
             const assistantMsg: Message = { role: 'assistant', content: data.answer };
@@ -33,6 +53,7 @@ const ChatWidget: React.FC = () => {
         } finally {
             setLoading(false);
             setInput('');
+            setSelectedText('');
         }
     };
 
@@ -57,7 +78,7 @@ const ChatWidget: React.FC = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask a question about the chapter..."
+                placeholder={selectedText ? 'Ask about selected text...' : 'Ask a question about the chapter...'}
                 disabled={loading}
                 rows={2}
             />

@@ -79,13 +79,25 @@ physical-ai-robotics/
 
 ### Environment Variables (set in Vercel or a `.env` file for local dev)
 ```
-OPENAI_API_KEY=...
+LLM_PROVIDER=openrouter  # or 'gemini'
+OPENROUTER_API_KEY=...
+OPENROUTER_MODEL=openai/gpt-4o-mini
+OPENROUTER_EMBED_MODEL=text-embedding-3-small
+GEMINI_API_KEY=...
+GEMINI_MODEL=gemini-1.5-flash
+GEMINI_EMBED_MODEL=text-embedding-004
 QDRANT_URL=...
 QDRANT_API_KEY=...
 NEON_DB_URL=...
 BETTER_AUTH_CLIENT_ID=...
 BETTER_AUTH_CLIENT_SECRET=...
 ```
+
+### Submission Checklist
+- Public GitHub Repo Link
+- Published book link (GitHub Pages/Vercel)
+- Demo video (under 90 seconds)
+- WhatsApp number
 
 ### License
 MIT – feel free to adapt and extend for your own courses.

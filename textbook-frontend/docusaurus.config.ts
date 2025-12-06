@@ -21,7 +21,7 @@ const config: Config = {
       'classic',
       {
         docs: {
-          sidebarPath: require.resolve('./sidebars.js'),
+          sidebarPath: require.resolve('./sidebars.ts'),
           editUrl: 'https://github.com/SyedaFatimaNoor/Physical-AI-Humanoid-Robotics/edit/main/textbook-frontend/',
         },
         theme: {

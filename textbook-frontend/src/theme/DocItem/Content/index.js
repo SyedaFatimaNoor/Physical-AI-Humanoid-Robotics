@@ -53,8 +53,8 @@ export default function ContentWrapper(props) {
 
         try {
             const endpoint =
-                mode === 'urdu' ? 'http://localhost:8000/rag/translate' : 'http://localhost:8000/rag/personalize';
-            const body = mode === 'urdu' ? {text, target_language: 'Urdu'} : {text, level: 'beginner'};
+                mode === 'urdu' ? '/api/translate' : '/api/personalize';
+            const body = mode === 'urdu' ? { chapter: text, language: 'ur' } : { text, level: 'beginner' };
 
             const response = await fetch(endpoint, {
                 method: 'POST',
@@ -62,7 +62,7 @@ export default function ContentWrapper(props) {
                 body: JSON.stringify(body),
             });
             const data = await response.json();
-            setCustomContent(data.personalized_markdown || data.translated_markdown || '');
+            setCustomContent(data.personalized_markdown || data.translated || '');
             setContentMode(mode);
         } catch (error) {
             console.error(error);
