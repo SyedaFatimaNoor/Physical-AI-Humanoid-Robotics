@@ -84,7 +84,7 @@ const config: Config = {
       copyright: `Copyright © ${new Date().getFullYear()} Physical AI Book. Built with Docusaurus.`,
     },
     colorMode: {
-      defaultMode: 'dark',
+      defaultMode: 'light',
       disableSwitch: false,
       respectPrefersColorScheme: false,
     },
