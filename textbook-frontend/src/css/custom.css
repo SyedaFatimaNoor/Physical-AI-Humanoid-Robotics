@@ -991,38 +991,6 @@ article {
   animation: fadeInUp 0.5s ease-out;
 }
 
-/* ============================================
-   RESPONSIVE ADJUSTMENTS
-   ============================================ */
-
-/* Images and Media */
-img,
-video {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-}
-
-/* Tablet Adjustments */
-@media (max-width: 996px) {
-  [data-theme='dark'] .hero__title {
-    font-size: 2.5rem;
-  }
-
-  .hero__subtitle {
-    font-size: 1.1rem;
-  }
-
-  [data-theme='dark'] article {
-    padding: 1.5rem;
-    margin: 0.5rem 0;
-  }
-
-  .navbar__item {
-    padding: 0.25rem 0.5rem;
-  }
-}
-
 /* Mobile Adjustments */
 @media (max-width: 768px) {
   html {
