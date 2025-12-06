@@ -44,8 +44,44 @@ const config: Config = {
     },
     footer: {
       style: 'dark',
-      links: [],
-      copyright: `© ${new Date().getFullYear()} Physical AI`,
+      links: [
+        {
+          title: 'Book',
+          items: [
+            {
+              label: 'Introduction',
+              to: '/docs/intro',
+            },
+          ],
+        },
+        {
+          title: 'Community',
+          items: [
+            {
+              label: 'Stack Overflow',
+              href: 'https://stackoverflow.com/questions/tagged/docusaurus',
+            },
+            {
+              label: 'Discord',
+              href: 'https://discordapp.com/invite/docusaurus',
+            },
+            {
+              label: 'X',
+              href: 'https://x.com/docusaurus',
+            },
+          ],
+        },
+        {
+          title: 'More',
+          items: [
+            {
+              label: 'GitHub',
+              href: 'https://github.com/SyedaFatimaNoor/Physical-AI-Humanoid-Robotics',
+            },
+          ],
+        },
+      ],
+      copyright: `Copyright © ${new Date().getFullYear()} Physical AI Book. Built with Docusaurus.`,
     },
     colorMode: {
       defaultMode: 'dark',
