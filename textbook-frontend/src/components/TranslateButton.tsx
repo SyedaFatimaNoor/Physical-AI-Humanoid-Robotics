@@ -12,7 +12,11 @@ const TranslateButton = () => {
         const text = article.innerText;
 
         try {
-            const response = await fetch('http://localhost:8000/api/translate', {
+            const baseUrl = (typeof process !== 'undefined' && process.env.REACT_APP_API_URL)
+                ? process.env.REACT_APP_API_URL
+                : 'http://localhost:8000';
+
+            const response = await fetch(`${baseUrl}/api/translate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chapter: text, language: 'ur' })

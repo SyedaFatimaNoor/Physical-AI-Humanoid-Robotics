@@ -45,12 +45,19 @@ export default function ChatBot() {
         setIsLoading(true);
 
         try {
-            const endpoint = isSelection ? '/rag/ask-selection' : '/rag/ask';
+            // Use /api/chat matching the backend.
+            // isSelection passes 'selected_text' in the body.
+            const endpoint = '/api/chat';
+            // Use configured backend URL or default to localhost
+            const baseUrl = (typeof process !== 'undefined' && process.env.REACT_APP_API_URL)
+                ? process.env.REACT_APP_API_URL
+                : 'http://localhost:8000';
+
             const body = isSelection
                 ? { query: message, selected_text: selectedText }
                 : { query: message, history: messages };
 
-            const response = await fetch(`http://localhost:8000${endpoint}`, {
+            const response = await fetch(`${baseUrl}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
