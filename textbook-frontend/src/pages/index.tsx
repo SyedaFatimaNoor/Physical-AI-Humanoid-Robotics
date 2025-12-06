@@ -84,21 +84,8 @@ function HomepageHeader() {
       <div className={styles.heroBackdrop} aria-hidden="true" />
       <div className={styles.heroAurora} aria-hidden="true" />
       <div className={clsx('container', styles.heroContainer)}>
-        <div className={styles.heroMetaRow}>
-          <span>Next intake · February 2025</span>
-          <div>
-            <span>Guided hardware bring-up</span>
-            <span>Live RAG copilots</span>
-            <span>Safety reviews</span>
-          </div>
-        </div>
         <div className={styles.heroGrid}>
           <div className={styles.heroCopy}>
-            <div className={styles.heroSignalRow}>
-              <span>Studio-grade release</span>
-              <span>24-week build track</span>
-            </div>
-            <span className={styles.pill}>Studio-grade curriculum</span>
             <h1 className={styles.heroTitle}>
               Physical AI & <span>Humanoid Robotics</span>
             </h1>
@@ -180,8 +167,8 @@ function HomepageHeader() {
 
           </div>
         </div>
-      </div>
-    </header>
+      </div >
+    </header >
   );
 }
 
