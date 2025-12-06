@@ -1,99 +1,73 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, Depends
-from fastapi.middleware.cors import CORSMiddleware
+# main.py
+"""FastAPI entrypoint for the Physical AI textbook RAG backend.
+
+Deployed on Vercel Serverless (Python runtime). Vercel expects a `api` directory with a handler function.
+Here we expose `/api/chat` and `/api/translate` endpoints.
+"""
+
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List, Optional
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# Import backend modules (will be created later)
+from rag import get_answer
+from db import get_user_preferences, store_user_profile
 
-app = FastAPI(title="Physical AI RAG Backend")
+app = FastAPI()
 
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-from pydantic import BaseModel
-from typing import List, Optional
-from rag import search_context, generate_answer, get_embedding, personalize_text, translate_text
-from db import init_db, get_db_connection
-
-# Models
 class ChatRequest(BaseModel):
     query: str
-    history: Optional[List[dict]] = []
-
-class PersonalizeRequest(BaseModel):
-    text: str
-    level: str # beginner, intermediate, expert
+    selected_text: str | None = None
+    user_id: str | None = None
 
 class TranslateRequest(BaseModel):
-    text: str
-    target_language: str = "Urdu"
+    chapter: str
+    language: str = "ur"
+    user_id: str | None = None
 
-@app.on_event("startup")
-async def startup_event():
-    init_db()
+@app.post("/api/chat")
+async def chat_endpoint(req: ChatRequest):
+    # Authentication placeholder – Vercel will forward JWT in headers
+    # In production, verify JWT via Better Auth SDK
+    answer = await get_answer(req.query, req.selected_text)
+    return JSONResponse(content={"answer": answer})
 
-@app.post("/rag/ask")
-async def ask_question(request: ChatRequest):
-    context = search_context(request.query)
-    answer = generate_answer(request.query, context)
-    return {"answer": answer, "context": context}
+@app.post("/api/translate")
+async def translate_endpoint(req: TranslateRequest):
+    # Simple wrapper – actual translation logic in rag.py
+    translated = await get_answer(f"Translate the following to {req.language}: {req.chapter}")
+    return JSONResponse(content={"translated": translated})
 
-class SelectionRequest(BaseModel):
-    query: str
-    selected_text: str
+# New personalize endpoint
+@app.post("/api/personalize")
+async def personalize_endpoint(req: dict):
+    """Expect JSON with 'text' and optional 'level' to personalize content."""
+    text = req.get("text")
+    level = req.get("level", "beginner")
+    if not text:
+        raise HTTPException(status_code=400, detail="Missing 'text' field")
+    prompt = f"Personalize the following content for a {level} learner. Use markdown and keep tone friendly.\n\n{text}"
+    personalized = await get_answer(prompt)
+    return JSONResponse(content={"personalized_markdown": personalized})
 
-@app.post("/rag/ask-selection")
-async def ask_selection(request: SelectionRequest):
-    # For selection, we prioritize the selected text as context
-    # We could also embed it to find related concepts, but direct usage is often best for "explain this"
-    context = [{"text": request.selected_text, "source": "User Selection"}]
-    answer = generate_answer(request.query, context)
-    return {"answer": answer, "context": context}
-
-@app.post("/rag/personalize")
-async def personalize_content(request: PersonalizeRequest):
-    personalized_text = personalize_text(request.text, request.level)
-    return {
-        "personalized_markdown": personalized_text,
-        "meta": {"level": request.level}
-    }
-
-@app.post("/rag/translate")
-async def translate_content(request: TranslateRequest):
-    translated_text = translate_text(request.text, request.target_language)
-    return {
-        "translated_markdown": translated_text
-    }
-
-from auth import create_user, authenticate_user, User
-
-class SignupRequest(User):
-    pass
-
-class SigninRequest(BaseModel):
+class SignInRequest(BaseModel):
     email: str
     password: str
 
-@app.post("/auth/signup")
-async def signup(user: SignupRequest):
+# Authentication endpoints using Better Auth
+from auth import User, create_user, authenticate_user
+
+@app.post("/api/signup")
+async def signup(user: User):
     user_id = create_user(user)
-    if user_id:
-        return {"message": "User created successfully", "user_id": user_id}
-    raise HTTPException(status_code=400, detail="User creation failed")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="User creation failed")
+    return {"user_id": user_id}
 
-@app.post("/auth/signin")
-async def signin(creds: SigninRequest):
-    user = authenticate_user(creds.email, creds.password)
-    if user:
-        return {"message": "Login successful", "user": {"email": user['email'], "name": user['full_name']}}
-    raise HTTPException(status_code=401, detail="Invalid credentials")
-
-
+@app.post("/api/signin")
+async def signin(req: SignInRequest):
+    user = authenticate_user(req.email, req.password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    return {"user": user}

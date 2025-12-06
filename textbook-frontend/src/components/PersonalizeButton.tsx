@@ -12,7 +12,7 @@ const PersonalizeButton = () => {
         const text = article.innerText;
 
         try {
-            const response = await fetch('http://localhost:8000/rag/personalize', {
+            const response = await fetch('http://localhost:8000/api/personalize', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text, level: 'beginner' })

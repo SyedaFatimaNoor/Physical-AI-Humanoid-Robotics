@@ -1,46 +1,21 @@
-# Physical AI & Humanoid Robotics - Textbook Specification
+# Physical AI & Humanoid Robotics Textbook Spec
 
-## Project Overview
-A comprehensive, interactive textbook for teaching Physical AI and Humanoid Robotics, featuring a RAG chatbot, personalization, and multilingual support.
-
-## Course Outline
-
-### Module 1: Foundations
-1. **Physical AI foundations**: Embodied intelligence, sensors, actuators.
-2. **ROS 2 (3 weeks)**: Nodes, topics, services, actions, rclpy, launch files.
-3. **Gazebo simulation**: Worlds, models, plugins, physics engines.
-4. **Unity visualization**: URDF import, ROS-TCP connector, high-fidelity rendering.
-5. **NVIDIA Isaac Sim & Isaac ROS**: Photorealistic sim, GEMs, replicator.
-
-### Module 2: Advanced Control & Learning
-6. **Reinforcement learning for robots**: OpenAI Gym, stable-baselines3, reward shaping.
-7. **Humanoid kinematics & locomotion**: FK/IK, gait generation, ZMP, inverted pendulum.
-8. **Manipulation**: Grasping, motion planning (MoveIt), pick and place.
-9. **VLA (Vision Language Action)**: RT-1, RT-2, multimodal transformers.
-
-### Module 3: Interaction & Integration
-10. **Conversational robotics with GPT models**: LLM integration, prompt engineering, voice I/O.
-11. **Capstone: Autonomous Humanoid Robot**: Full system integration, nav + manipulation + chat.
-
-## Agent Commands (Claude Code)
-
-### Generate Chapter
-```bash
-/run-skill Chapter Writer --topic "ROS 2 Fundamentals" --slug "ros2-fundamentals" --level "Intermediate"
-```
-
-### Generate Lab
-```bash
-/run-skill Lab Generator --topic "Gazebo World Creation" --tools ["Gazebo", "URDF"]
-```
-
-### Robot Mentor
-```bash
-/run-skill Robot Mentor Agent --task "Generate a URDF for a 2-DOF arm" --context "Use simple cylinders and revolute joints"
-```
-
-## Architecture
-- **Frontend**: Docusaurus + React + TypeScript
-- **Backend**: FastAPI + Python
-- **Database**: Qdrant (Vector), Postgres (User Data)
-- **AI**: Gemini 1.5 Flash
+title: "Physical AI & Humanoid Robotics"
+chapters:
+  - name: "Module 1: Introduction to Physical AI"
+    description: "Foundations of embodied intelligence, digital vs physical AI, sensor systems (LIDAR, cameras, IMUs)."
+  - name: "Module 2: ROS 2 Fundamentals"
+    description: "ROS 2 architecture, nodes, topics, services, rclpy, launch files."
+  - name: "Module 3: Robot Simulation with Gazebo"
+    description: "Physics simulation, URDF/SDF, sensor simulation, Unity visualization."
+  - name: "Module 4: NVIDIA Isaac Platform"
+    description: "Isaac SDK, Isaac Sim, AI-powered perception, reinforcement learning, sim-to-real transfer."
+  - name: "Module 5: Humanoid Robot Development"
+    description: "Kinematics, dynamics, bipedal locomotion, balance, manipulation, grasping."
+  - name: "Module 6: Conversational Robotics"
+    description: "Integrating GPT models, speech recognition, VLA (Vision-Language-Action), cognitive planning."
+  - name: "Capstone Project: The Autonomous Humanoid"
+    description: "Building an integrated system: voice command -> plan -> navigate -> identify -> manipulate."
+format: markdown
+output_dir: "../textbook-frontend/docs"
+model: "gpt-4.1"

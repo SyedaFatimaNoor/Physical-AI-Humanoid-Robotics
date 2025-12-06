@@ -1,11 +1,10 @@
-fastapi
-uvicorn
-pydantic
-python-dotenv
-google-generativeai
-httpx
-qdrant-client
-psycopg2-binary
-asyncpg
-python-multipart
-requests
+fastapi>=0.88.0
+uvicorn[standard]>=0.19.0
+openai>=1.0.0
+qdrant-client>=1.7.0
+google-generativeai>=0.8.3
+# asyncpg might still fail on Python 3.14 without wheels, but let's try.
+asyncpg>=0.27.0
+python-dotenv>=1.0.0
+# Pydantic v1 is pure python compatible often, or v2 might work if we get lucky with binaries
+pydantic>=1.10.0

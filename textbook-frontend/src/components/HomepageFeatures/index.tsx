@@ -1,58 +1,59 @@
 import type {ReactNode} from 'react';
-import clsx from 'clsx';
-import Heading from '@theme/Heading';
 import styles from './styles.module.css';
 
 type FeatureItem = {
   title: string;
-  Svg: React.ComponentType<React.ComponentProps<'svg'>>;
   description: ReactNode;
+  icon: string;
+  meta: string;
 };
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    title: 'Adaptive Control Studio',
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Build reusable control blocks with latency budgets, watchdogs, and ROS 2 QoS templates that survive
+        lab-to-field shifts.
       </>
     ),
+    icon: '01',
+    meta: 'Control & middleware',
   },
   {
-    title: 'Focus on What Matters',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    title: 'Simulation to Reality Bridge',
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Validate full-stack behaviors in Gazebo & Isaac, then auto-generate calibration and telemetry rituals for the
+        real robot.
       </>
     ),
+    icon: '02',
+    meta: 'Sim pipelines',
   },
   {
-    title: 'Powered by React',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    title: 'RAG Copilot Inbox',
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Spin up a notebook-aware assistant that surfaces troubleshooting recipes, BOM context, and test results in
+        under a second.
       </>
     ),
+    icon: '03',
+    meta: 'AI assistance',
   },
 ];
 
-function Feature({title, Svg, description}: FeatureItem) {
+function Feature({title, description, icon, meta}: FeatureItem) {
   return (
-    <div className={clsx('col col--4')}>
-      <div className="text--center">
-        <Svg className={styles.featureSvg} role="img" />
-      </div>
-      <div className="text--center padding-horiz--md">
-        <Heading as="h3">{title}</Heading>
+    <article className={styles.featureCard}>
+      <div className={styles.featureIcon}>{icon}</div>
+      <div className={styles.featureBody}>
+        <div className={styles.featureMeta}>{meta}</div>
+        <h3>{title}</h3>
         <p>{description}</p>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -60,9 +61,9 @@ export default function HomepageFeatures(): ReactNode {
   return (
     <section className={styles.features}>
       <div className="container">
-        <div className="row">
-          {FeatureList.map((props, idx) => (
-            <Feature key={idx} {...props} />
+        <div className={styles.featureGrid}>
+          {FeatureList.map((props) => (
+            <Feature key={props.title} {...props} />
           ))}
         </div>
       </div>

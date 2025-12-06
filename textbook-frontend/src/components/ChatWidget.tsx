@@ -1,107 +1,69 @@
-import React, { useState, useEffect, ChangeEvent, KeyboardEvent } from 'react';
-import './chat.css';
+// src/components/ChatWidget.tsx
+import React, { useState } from 'react';
+// Using native fetch instead of axios
+import './ChatWidget.css'; // We'll add minimal styling later
 
 interface Message {
-    role: string;
+    role: 'user' | 'assistant';
     content: string;
 }
 
 const ChatWidget: React.FC = () => {
-    const [isOpen, setIsOpen] = useState<boolean>(false);
     const [messages, setMessages] = useState<Message[]>([]);
-    const [input, setInput] = useState<string>('');
-    const [loading, setLoading] = useState<boolean>(false);
-    const [selectedText, setSelectedText] = useState<string>('');
-
-    useEffect(() => {
-        const handleSelection = () => {
-            const selection = window.getSelection();
-            const text = selection ? selection.toString() : '';
-            if (text && text.length > 10) {
-                setSelectedText(text);
-                if (!isOpen) setIsOpen(true); // Auto-open on selection
-            }
-        };
-
-        document.addEventListener('mouseup', handleSelection);
-        return () => document.removeEventListener('mouseup', handleSelection);
-    }, [isOpen]);
-
-    const toggleChat = () => setIsOpen(!isOpen);
+    const [input, setInput] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const sendMessage = async () => {
-        if (!input.trim() && !selectedText) return;
-
+        if (!input.trim()) return;
         const userMsg: Message = { role: 'user', content: input };
-        setMessages((prev: Message[]) => [...prev, userMsg]);
-        setInput('');
+        setMessages((prev) => [...prev, userMsg]);
         setLoading(true);
-
         try {
-            let endpoint = 'http://localhost:8000/rag/ask';
-            let body: any = { query: input, history: messages };
-
-            if (selectedText) {
-                endpoint = 'http://localhost:8000/rag/ask-selection';
-                body = { query: input || "Explain this selection", selected_text: selectedText };
-                // Clear selection after sending
-                setSelectedText('');
-            }
-
-            const response = await fetch(endpoint, {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                body: JSON.stringify({ query: input })
             });
             const data = await response.json();
-            setMessages((prev: Message[]) => [...prev, { role: 'assistant', content: data.answer }]);
-        } catch (error) {
-            setMessages((prev: Message[]) => [...prev, { role: 'assistant', content: "Error connecting to AI." }]);
+            const assistantMsg: Message = { role: 'assistant', content: data.answer };
+            setMessages((prev) => [...prev, assistantMsg]);
+        } catch (err) {
+            const errMsg: Message = { role: 'assistant', content: 'Error: unable to get response.' };
+            setMessages((prev) => [...prev, errMsg]);
         } finally {
             setLoading(false);
+            setInput('');
+        }
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
         }
     };
 
     return (
-        <div className="chat-widget-container">
-            {!isOpen && (
-                <button className="chat-toggle-btn" onClick={toggleChat}>
-                    💬 Ask AI
-                </button>
-            )}
-            {isOpen && (
-                <div className="chat-window">
-                    <div className="chat-header">
-                        <h3>Physical AI Assistant</h3>
-                        <button onClick={toggleChat}>X</button>
+        <div className="chat-widget">
+            <div className="messages">
+                {messages.map((msg, idx) => (
+                    <div key={idx} className={`message ${msg.role}`}>
+                        {msg.content}
                     </div>
-                    <div className="chat-messages">
-                        {messages.map((msg, idx) => (
-                            <div key={idx} className={`message ${msg.role}`}>
-                                {msg.content}
-                            </div>
-                        ))}
-                        {loading && <div className="message assistant">Thinking...</div>}
-                    </div>
-
-                    {selectedText && (
-                        <div className="selection-preview">
-                            <small>Selected: {selectedText.substring(0, 30)}...</small>
-                            <button onClick={() => setSelectedText('')}>x</button>
-                        </div>
-                    )}
-
-                    <div className="chat-input">
-                        <input
-                            value={input}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
-                            onKeyPress={(e: KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && sendMessage()}
-                            placeholder={selectedText ? "Ask about selection..." : "Ask a question..."}
-                        />
-                        <button onClick={sendMessage}>Send</button>
-                    </div>
-                </div>
-            )}
+                ))}
+                {loading && <div className="message assistant">Typing...</div>}
+            </div>
+            <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask a question about the chapter..."
+                disabled={loading}
+                rows={2}
+            />
+            <button onClick={sendMessage} disabled={loading || !input.trim()}>
+                Send
+            </button>
         </div>
     );
 };

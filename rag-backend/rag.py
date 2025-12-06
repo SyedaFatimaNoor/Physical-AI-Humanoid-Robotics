@@ -1,153 +1,144 @@
+# rag.py
+"""Core Retrieval-Augmented Generation logic with pluggable LLM providers."""
+import asyncio
 import os
+from typing import Awaitable, Callable, List, Tuple
+
 from dotenv import load_dotenv
+from qdrant_client import QdrantClient
+
+# Load environment variables from .env if present
 load_dotenv()
-
-import httpx
-from db import qdrant_client
-
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-
-# Default model - you can change this to any model available on OpenRouter
-# Popular options: "google/gemini-flash-1.5", "openai/gpt-4o-mini", "anthropic/claude-3-haiku"
-DEFAULT_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-flash-1.5")
-EMBEDDING_MODEL = os.getenv("OPENROUTER_EMBEDDING_MODEL", "openai/text-embedding-3-small")
 
 COLLECTION_NAME = "textbook_chunks"
 
-def call_openrouter(messages: list, model: str = None) -> str:
-    """Make a chat completion request to OpenRouter API."""
-    if not OPENROUTER_API_KEY:
-        return "OpenRouter API Key not found. Please set OPENROUTER_API_KEY in .env."
-    
-    model = model or DEFAULT_MODEL
-    
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://physical-ai-textbook.com",
-        "X-Title": "Physical AI Textbook RAG"
-    }
-    
-    payload = {
-        "model": model,
-        "messages": messages
-    }
-    
-    try:
-        with httpx.Client(timeout=60.0) as client:
-            response = client.post(
-                f"{OPENROUTER_BASE_URL}/chat/completions",
-                headers=headers,
-                json=payload
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data["choices"][0]["message"]["content"]
-    except httpx.HTTPStatusError as e:
-        return f"OpenRouter API error: {e.response.status_code} - {e.response.text}"
-    except Exception as e:
-        return f"Error calling OpenRouter: {str(e)}"
+QDRANT_URL = os.getenv("QDRANT_URL")
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openrouter").lower()
 
-def get_embedding(text: str):
-    """Get embeddings using OpenRouter's embedding endpoint."""
-    if not OPENROUTER_API_KEY:
-        return [0.0] * 1536  # Mock embedding if no key (1536 for OpenAI embeddings)
-    
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://physical-ai-textbook.com",
-        "X-Title": "Physical AI Textbook RAG"
-    }
-    
-    payload = {
-        "model": EMBEDDING_MODEL,
-        "input": text
-    }
-    
-    try:
-        with httpx.Client(timeout=30.0) as client:
-            response = client.post(
-                f"{OPENROUTER_BASE_URL}/embeddings",
-                headers=headers,
-                json=payload
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data["data"][0]["embedding"]
-    except Exception as e:
-        print(f"Embedding error: {e}")
-        return [0.0] * 1536
+if not QDRANT_URL or not QDRANT_API_KEY:
+    raise RuntimeError("QDRANT_URL and QDRANT_API_KEY must be set.")
 
-def search_context(query: str, limit: int = 5):
-    if not qdrant_client:
-        return []
-    
-    query_vector = get_embedding(query)
-    hits = qdrant_client.search(
-        collection_name=COLLECTION_NAME,
-        query_vector=query_vector,
-        limit=limit
+qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+
+EmbedFn = Callable[[str], Awaitable[List[float]]]
+GenerateFn = Callable[[str], Awaitable[str]]
+
+
+def _require_env(var_name: str) -> str:
+    value = os.getenv(var_name)
+    if not value:
+        raise RuntimeError(f"{var_name} must be set when using provider '{LLM_PROVIDER}'.")
+    return value
+
+
+async def _gemini_embed(text: str) -> List[float]:
+    import google.generativeai as genai  # lazy import to avoid dependency unless needed
+
+    def _embed():
+        resp = genai.embed_content(model=GEMINI_EMBED_MODEL, content=text)
+        return resp["embedding"]
+
+    return await asyncio.to_thread(_embed)
+
+
+async def _gemini_generate(prompt: str) -> str:
+    import google.generativeai as genai
+
+    def _generate():
+        model = genai.GenerativeModel(GEMINI_MODEL)
+        system_prompt = "You are an expert AI tutor for Physical AI & Humanoid Robotics. Provide clear, structured, and educational responses using markdown formatting. Focus on helping students learn effectively with practical examples and accessible explanations."
+        
+        full_prompt = f"{system_prompt}\n\n{prompt}"
+        response = model.generate_content(
+            [{"role": "user", "parts": [full_prompt]}],
+            generation_config={
+                "temperature": 0.3,
+            },
+        )
+        return (response.text or "").strip()
+
+    return await asyncio.to_thread(_generate)
+
+
+async def _openrouter_embed(text: str) -> List[float]:
+    resp = await OPENROUTER_CLIENT.embeddings.create(model=OPENROUTER_EMBED_MODEL, input=text)
+    return resp.data[0].embedding
+
+
+async def _openrouter_generate(prompt: str) -> str:
+    completion = await OPENROUTER_CLIENT.chat.completions.create(
+        model=OPENROUTER_MODEL,
+        messages=[
+            {
+                "role": "system", 
+                "content": "You are an expert AI tutor for Physical AI & Humanoid Robotics. Provide clear, structured, and educational responses using markdown formatting. Focus on helping students learn effectively with practical examples and accessible explanations."
+            },
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.3,
     )
-    return [hit.payload for hit in hits]
+    return completion.choices[0].message.content.strip()
 
-def generate_answer(query: str, context: list):
-    context_str = "\n\n".join([c.get('text', '') for c in context])
+
+if LLM_PROVIDER == "gemini":
+    import google.generativeai as genai
+
+    GEMINI_API_KEY = _require_env("GEMINI_API_KEY")
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+    GEMINI_EMBED_MODEL = os.getenv("GEMINI_EMBED_MODEL", "text-embedding-004")
+
+    genai.configure(api_key=GEMINI_API_KEY)
+    embed_text: EmbedFn = _gemini_embed
+    generate_text: GenerateFn = _gemini_generate
+else:
+    from openai import AsyncOpenAI
+
+    OPENROUTER_API_KEY = _require_env("OPENROUTER_API_KEY")
+    OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+    OPENROUTER_EMBED_MODEL = os.getenv("OPENROUTER_EMBED_MODEL", "text-embedding-3-small")
+    OPENROUTER_CLIENT = AsyncOpenAI(base_url="https://openrouter.ai/api/v1", api_key=OPENROUTER_API_KEY)
+
+    embed_text = _openrouter_embed
+    generate_text = _openrouter_generate
+
+
+async def _search(query: str, top_k: int = 5) -> List[Tuple[str, str]]:
+    """Search Qdrant for the most similar chunks. Returns a list of (chunk_id, text)."""
+    query_vec = await embed_text(query)
+    results = qdrant.search(
+        collection_name=COLLECTION_NAME,
+        query_vector=query_vec,
+        limit=top_k,
+        with_payload=True,
+    )
+    return [(hit.id, hit.payload["text"]) for hit in results]
+
+
+async def get_answer(query: str, selected_text: str | None = None) -> str:
+    """Generate an answer using retrieved context. Optionally scope to selected text."""
+    context_chunks = await _search(query)
+    context_text = "\n\n".join([c[1] for c in context_chunks])
     
-    messages = [
-        {
-            "role": "system",
-            "content": """You are an expert AI assistant for a Physical AI & Humanoid Robotics textbook. 
-Use the provided context to answer the user's question. 
-If the answer is not in the context, use your general knowledge but mention that it's outside the textbook scope."""
-        },
-        {
-            "role": "user",
-            "content": f"""Context:
-{context_str}
-
-Question: {query}"""
-        }
-    ]
+    prompt = (
+        "You are an expert AI tutor for the Physical AI & Humanoid Robotics textbook. "
+        "Your goal is to provide clear, comprehensive, and educational responses that help students learn effectively.\n\n"
+        "Guidelines for your responses:\n"
+        "1. Use ONLY the provided textbook context to answer questions\n"
+        "2. Structure your answers with clear headings and bullet points when appropriate\n"
+        "3. Provide practical examples and real-world applications when possible\n"
+        "4. Explain technical concepts in an accessible way for learners\n"
+        "5. If the context doesn't contain enough information, clearly state the limitations\n"
+        "6. Use markdown formatting for better readability (bold, lists, code blocks)\n"
+        "7. Keep responses concise yet comprehensive (150-300 words typically)\n\n"
+        f"Context from textbook:\n{context_text}\n\n"
+        f"User Question: {query}\n"
+    )
     
-    return call_openrouter(messages)
+    if selected_text:
+        prompt += (
+            f"\nSelected Text for context:\n{selected_text}\n"
+            "Please explain this specific passage in detail, connecting it to broader concepts from the textbook."
+        )
 
-def personalize_text(text: str, level: str):
-    messages = [
-        {
-            "role": "system",
-            "content": """You are an expert at adapting educational content for different skill levels.
-            
-Level Definitions:
-- Beginner: Simple language, more analogies, define technical terms.
-- Intermediate: Standard technical textbook style.
-- Expert: Concise, focus on advanced concepts, assume prior knowledge."""
-        },
-        {
-            "role": "user",
-            "content": f"""Rewrite the following textbook content for a {level} level audience.
-
-Content:
-{text}"""
-        }
-    ]
-    
-    return call_openrouter(messages)
-
-def translate_text(text: str, target_language: str):
-    messages = [
-        {
-            "role": "system",
-            "content": "You are an expert translator. Maintain markdown formatting exactly when translating."
-        },
-        {
-            "role": "user",
-            "content": f"""Translate the following textbook content into {target_language}.
-
-Content:
-{text}"""
-        }
-    ]
-    
-    return call_openrouter(messages)
+    return await generate_text(prompt)

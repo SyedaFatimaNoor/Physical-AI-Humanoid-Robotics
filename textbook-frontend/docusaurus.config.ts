@@ -1,158 +1,60 @@
-import { themes as prismThemes } from 'prism-react-renderer';
-import type { Config } from '@docusaurus/types';
-import type * as Preset from '@docusaurus/preset-classic';
-
-// This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+// docusaurus.config.ts
+import { Config } from '@docusaurus/types';
+import path from 'path';
 
 const config: Config = {
-  title: 'Physical AI & Humanoid Robotics',
-  tagline: 'Master the Future of Embodied Intelligence',
+  title: 'Physical AI & Humanoid Robotics Textbook',
+  tagline: 'Embodied Intelligence for the Future',
+  url: 'https://your-username.github.io', // replace with actual repo URL
+  baseUrl: '/',
+  organizationName: 'your-username', // GitHub org/user name.
+  projectName: 'physical-ai-humanoid-robotics-textbook', // repo name.
   favicon: 'img/favicon.ico',
-
-  // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
-  future: {
-    v4: true, // Improve compatibility with the upcoming Docusaurus v4
-  },
-
-  // Set the production url of your site here
-  url: 'https://syedafatimanoor.github.io',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/Physical-AI-Humanoid-Robotics/',
-
-  // GitHub pages deployment config.
-  organizationName: 'SyedaFatimaNoor', // GitHub username
-  projectName: 'Physical-AI-Humanoid-Robotics', // Repo name
-
-  onBrokenLinks: 'warn',
+  onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-
-  // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
-    locales: ['en', 'ur'],
+    locales: ['en'], // , 'ur'
   },
-
   presets: [
     [
       'classic',
       {
         docs: {
-          sidebarPath: './sidebars.ts',
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
-        },
-        blog: {
-          showReadingTime: true,
-          feedOptions: {
-            type: ['rss', 'atom'],
-            xslt: true,
-          },
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
-          // Useful options to enforce blogging best practices
-          onInlineTags: 'warn',
-          onInlineAuthors: 'warn',
-          onUntruncatedBlogPosts: 'warn',
+          sidebarPath: require.resolve('./sidebars.js'),
+          editUrl: 'https://github.com/your-username/physical-ai-humanoid-robotics-textbook/edit/main/',
         },
         theme: {
-          customCss: './src/css/custom.css',
+          customCss: require.resolve('./src/css/custom.css'),
         },
-      } satisfies Preset.Options,
+      },
     ],
   ],
-
   themeConfig: {
-    // Replace with your project's social card
-    image: 'img/docusaurus-social-card.jpg',
-    colorMode: {
-      respectPrefersColorScheme: true,
-    },
     navbar: {
-      title: 'Physical AI & Humanoid Robotics',
+      title: 'Physical AI',
       logo: {
-        alt: 'Physical AI Logo',
+        alt: 'Logo',
         src: 'img/logo.svg',
       },
       items: [
-        {
-          type: 'docSidebar',
-          sidebarId: 'tutorialSidebar',
-          position: 'left',
-          label: 'Textbook',
-        },
-        { to: '/blog', label: 'Blog', position: 'left' },
-        {
-          type: 'localeDropdown',
-          position: 'right',
-        },
-        {
-          href: 'https://github.com/SyedaFatimaNoor/Physical-AI-Humanoid-Robotics',
-          label: 'GitHub',
-          position: 'right',
-        },
+        { to: '/docs/intro', label: 'Book', position: 'left' },
+        { href: 'https://github.com/SyedaFatimaNoor/Physical-AI-Humanoid-Robotics', label: 'GitHub', position: 'right' },
       ],
     },
     footer: {
       style: 'dark',
-      links: [
-        {
-          title: 'Learn',
-          items: [
-            {
-              label: 'Introduction',
-              to: '/docs/intro',
-            },
-            {
-              label: 'Capstone Project',
-              to: '/docs/chapter-11-capstone',
-            },
-          ],
-        },
-        {
-          title: 'Resources',
-          items: [
-            {
-              label: 'ROS 2 Documentation',
-              href: 'https://docs.ros.org/en/humble/',
-            },
-            {
-              label: 'NVIDIA Isaac',
-              href: 'https://developer.nvidia.com/isaac',
-            },
-            {
-              label: 'Panaversity',
-              href: 'https://panaversity.org',
-            },
-          ],
-        },
-        {
-          title: 'More',
-          items: [
-            {
-              label: 'Blog',
-              to: '/blog',
-            },
-            {
-              label: 'GitHub',
-              href: 'https://github.com/SyedaFatimaNoor/Physical-AI-Humanoid-Robotics',
-            },
-          ],
-        },
-      ],
-      copyright: `Copyright © ${new Date().getFullYear()} Panaversity. Built with Docusaurus.`,
+      links: [],
+      copyright: `© ${new Date().getFullYear()} Physical AI`,
     },
-    prism: {
-      theme: prismThemes.github,
-      darkTheme: prismThemes.dracula,
+    colorMode: {
+      defaultMode: 'dark',
+      disableSwitch: false,
+      respectPrefersColorScheme: false,
     },
-  } satisfies Preset.ThemeConfig,
+    // Custom CSS for gradients and micro‑animations will be added in src/css/custom.css
+  },
+  plugins: [],
 };
 
 export default config;

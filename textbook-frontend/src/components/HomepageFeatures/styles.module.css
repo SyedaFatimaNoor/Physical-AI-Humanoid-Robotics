@@ -1,11 +1,62 @@
 .features {
-  display: flex;
-  align-items: center;
-  padding: 2rem 0;
-  width: 100%;
+  padding: 4rem 0 6rem;
+  background: radial-gradient(circle at 0% 0%, rgba(98, 101, 255, 0.18), transparent 45%),
+    rgba(5, 5, 17, 1);
 }
 
-.featureSvg {
-  height: 200px;
-  width: 200px;
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.featureCard {
+  border-radius: 24px;
+  padding: 2rem 1.5rem;
+  background: rgba(10, 8, 29, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  gap: 1.25rem;
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.35);
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.featureCard:hover {
+  transform: translateY(-8px);
+  border-color: rgba(118, 247, 255, 0.35);
+}
+
+.featureIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(118, 247, 255, 0.25), rgba(99, 125, 255, 0.25));
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  color: #f4f7ff;
+  letter-spacing: 0.1em;
+}
+
+.featureBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.featureMeta {
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.featureBody h3 {
+  margin: 0;
+  color: #f4f7ff;
+}
+
+.featureBody p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
 }

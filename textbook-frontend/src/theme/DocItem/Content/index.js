@@ -1,82 +1,139 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
+import clsx from 'clsx';
 import Content from '@theme-original/DocItem/Content';
 import ReactMarkdown from 'react-markdown';
+import {useDoc} from '@docusaurus/plugin-content-docs/client';
+
+import styles from './styles.module.css';
+
+const statusCopy = {
+    default: 'Rendering the original textbook narrative',
+    personalized: 'Personalized for your learning profile',
+    urdu: 'Translated to Urdu with right-to-left formatting',
+};
 
 export default function ContentWrapper(props) {
+    const {metadata, frontMatter} = useDoc();
+    const heroTitle = metadata?.title ?? props.contentTitle ?? 'Physical AI Module';
+    const heroDescription =
+        frontMatter?.abstract ??
+        metadata?.description ??
+        'Operational briefings, labs, and autopilot rituals for embodied intelligence.';
+    const heroPill = frontMatter?.pill ?? 'Embodied Intelligence';
+    const moduleCode = frontMatter?.module ?? metadata?.permalink?.split('/').slice(-1)[0] ?? 'Module';
+    const heroChips =
+        (Array.isArray(frontMatter?.tags) && frontMatter.tags.length > 0 ? frontMatter.tags : null) ??
+        ['ROS 2', 'Gazebo', 'Isaac Sim'];
+
     const [contentMode, setContentMode] = useState('default'); // default, personalized, urdu
-    const [customContent, setCustomContent] = useState(null);
+    const [customContent, setCustomContent] = useState('');
     const [loading, setLoading] = useState(false);
+    const [baseText, setBaseText] = useState('');
+
+    useEffect(() => {
+        if (contentMode !== 'default') {
+            return;
+        }
+        const article = document.querySelector('.theme-doc-markdown');
+        const text = article ? article.innerText : '';
+        if (text) {
+            setBaseText(text);
+        }
+    }, [contentMode]);
 
     const handlePersonalize = async (mode) => {
         setLoading(true);
-        // We need to get the text content. 
-        // Since we are wrapping Content, we might not have easy access to the raw text prop unless we parse children.
-        // But grabbing from DOM is a reasonable fallback for this "overlay" approach.
-        // However, if we are in "default" mode, the content is rendered.
-        const article = document.querySelector('article');
-        const text = article ? article.innerText : "";
+        const text = baseText || document.querySelector('.theme-doc-markdown')?.innerText || '';
 
         if (!text) {
-            alert("Could not find content to process");
+            alert('Could not find content to process');
             setLoading(false);
             return;
         }
 
         try {
-            const endpoint = mode === 'urdu' ? 'http://localhost:8000/rag/translate' : 'http://localhost:8000/rag/personalize';
-            const body = mode === 'urdu'
-                ? { text, target_language: "Urdu" }
-                : { text, level: "beginner" };
+            const endpoint =
+                mode === 'urdu' ? 'http://localhost:8000/rag/translate' : 'http://localhost:8000/rag/personalize';
+            const body = mode === 'urdu' ? {text, target_language: 'Urdu'} : {text, level: 'beginner'};
 
             const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body),
             });
             const data = await response.json();
-            setCustomContent(data.personalized_markdown || data.translated_markdown);
+            setCustomContent(data.personalized_markdown || data.translated_markdown || '');
             setContentMode(mode);
         } catch (error) {
             console.error(error);
-            alert("Failed to process content. Backend might be offline.");
+            alert('Failed to process content. Backend might be offline.');
         } finally {
             setLoading(false);
         }
     };
 
+    const resetToOriginal = () => {
+        setContentMode('default');
+        setCustomContent('');
+    };
+
+    const renderBody =
+        contentMode === 'default' ? (
+            <div className={styles.docBodyCard}>
+                <Content {...props} />
+            </div>
+        ) : (
+            <div
+                className={clsx(styles.docBodyCard, styles.generatedPanel)}
+                dir={contentMode === 'urdu' ? 'rtl' : 'ltr'}>
+                <ReactMarkdown>{customContent}</ReactMarkdown>
+            </div>
+        );
+
     return (
-        <>
-            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                <button
-                    className={`button ${contentMode === 'default' ? 'button--secondary' : 'button--outline button--secondary'}`}
-                    onClick={() => setContentMode('default')}
-                    disabled={contentMode === 'default'}
-                >
-                    Original
-                </button>
-                <button
-                    className="button button--primary"
-                    onClick={() => handlePersonalize('personalized')}
-                    disabled={loading}
-                >
-                    {loading && contentMode === 'personalized' ? 'Personalizing...' : '✨ Personalize'}
-                </button>
-                <button
-                    className="button button--info"
-                    onClick={() => handlePersonalize('urdu')}
-                    disabled={loading}
-                >
-                    {loading && contentMode === 'urdu' ? 'Translating...' : '🌐 Translate to Urdu'}
-                </button>
+        <div className={styles.docShell}>
+            <section className={styles.docHero}>
+                <div className={styles.heroPillRow}>
+                    <span>{moduleCode}</span>
+                    <small>{heroPill}</small>
+                </div>
+                <h1>{heroTitle}</h1>
+                <p>{heroDescription}</p>
+                <div className={styles.heroChips}>
+                    {heroChips.map((chip) => (
+                        <span key={chip}>{chip}</span>
+                    ))}
+                </div>
+            </section>
+
+            <div className={styles.docActions}>
+                <div className={styles.actionCopy}>
+                    <span>Adaptive mode</span>
+                    <p>{statusCopy[contentMode]}</p>
+                </div>
+                <div className={styles.actionButtons}>
+                    <button
+                        className={clsx('button button--sm', contentMode === 'default' ? 'button--secondary' : '')}
+                        onClick={resetToOriginal}
+                        disabled={contentMode === 'default'}>
+                        Original
+                    </button>
+                    <button
+                        className={clsx('button button--sm button--primary', styles.primaryAction)}
+                        onClick={() => handlePersonalize('personalized')}
+                        disabled={loading}>
+                        {loading && contentMode === 'personalized' ? 'Personalizing…' : '✨ Personalize'}
+                    </button>
+                    <button
+                        className="button button--sm button--outline button--info"
+                        onClick={() => handlePersonalize('urdu')}
+                        disabled={loading}>
+                        {loading && contentMode === 'urdu' ? 'Translating…' : '🌐 Urdu'}
+                    </button>
+                </div>
             </div>
 
-            {contentMode === 'default' ? (
-                <Content {...props} />
-            ) : (
-                <div className="markdown" dir={contentMode === 'urdu' ? 'rtl' : 'ltr'} style={{ padding: '20px', border: '1px solid #eee', borderRadius: '8px' }}>
-                    <ReactMarkdown>{customContent}</ReactMarkdown>
-                </div>
-            )}
-        </>
+            {renderBody}
+        </div>
     );
 }

@@ -12,13 +12,13 @@ const TranslateButton = () => {
         const text = article.innerText;
 
         try {
-            const response = await fetch('http://localhost:8000/rag/translate', {
+            const response = await fetch('http://localhost:8000/api/translate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, target_language: 'Urdu' })
+                body: JSON.stringify({ chapter: text, language: 'ur' })
             });
             const data = await response.json();
-            setContent(data.translated_markdown);
+            setContent(data.translated);
         } catch (e) {
             console.error(e);
             alert("Failed to translate content");

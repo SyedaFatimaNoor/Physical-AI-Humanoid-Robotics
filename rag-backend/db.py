@@ -1,66 +1,42 @@
+# db.py
+"""Neon Postgres helper utilities.
+
+Provides a simple async wrapper around asyncpg for storing user profiles and preferences.
+The Better Auth SDK will issue a JWT containing the user's email; we can use that as the primary key.
+"""
 import os
-from dotenv import load_dotenv
-load_dotenv()
+import asyncpg
+from typing import Dict, Any
 
-from qdrant_client import QdrantClient
-import psycopg2
-from psycopg2.extras import RealDictCursor
+DATABASE_URL = os.getenv("NEON_DB_URL")
 
-# Qdrant Setup
-QDRANT_URL = os.getenv("QDRANT_URL")
-QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+async def _get_pool():
+    return await asyncpg.create_pool(DATABASE_URL)
 
-qdrant_client = None
-if QDRANT_URL and QDRANT_API_KEY:
-    qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+async def store_user_profile(email: str, profile: Dict[str, Any]):
+    """Insert or update a user profile.
+    `profile` is a dict of arbitrary fields (e.g., hardware background).
+    """
+    pool = await _get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """
+            INSERT INTO user_profiles (email, data)
+            VALUES ($1, $2::jsonb)
+            ON CONFLICT (email) DO UPDATE SET data = EXCLUDED.data;
+            """,
+            email,
+            profile,
+        )
+    await pool.close()
 
-# Neon Postgres Setup
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-def get_db_connection():
-    if not DATABASE_URL:
-        return None
-    try:
-        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-        return conn
-    except Exception as e:
-        print(f"Error connecting to database: {e}")
-        return None
-
-def init_db():
-    conn = get_db_connection()
-    if conn:
-        try:
-            cur = conn.cursor()
-            # Users table with extended profile
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id SERIAL PRIMARY KEY,
-                    email VARCHAR(255) UNIQUE NOT NULL,
-                    password_hash VARCHAR(255) NOT NULL,
-                    full_name VARCHAR(255),
-                    gpu VARCHAR(100),
-                    ros_level VARCHAR(50),
-                    programming_level VARCHAR(50),
-                    preferred_language VARCHAR(10) DEFAULT 'en',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """)
-            
-            # Ingest jobs table
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS ingest_jobs (
-                    id SERIAL PRIMARY KEY,
-                    status VARCHAR(50) NOT NULL,
-                    chunks_indexed INTEGER DEFAULT 0,
-                    error_message TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """)
-            
-            conn.commit()
-            cur.close()
-            conn.close()
-            print("Database initialized with extended schema.")
-        except Exception as e:
-            print(f"Error initializing database: {e}")
+async def get_user_preferences(email: str) -> Dict[str, Any]:
+    """Retrieve stored preferences for a user. Returns empty dict if none."""
+    pool = await _get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT data FROM user_profiles WHERE email = $1;",
+            email,
+        )
+    await pool.close()
+    return row["data"] if row else {}
