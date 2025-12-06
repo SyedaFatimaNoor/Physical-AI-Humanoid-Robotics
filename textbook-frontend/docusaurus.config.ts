@@ -5,7 +5,7 @@ import path from 'path';
 const config: Config = {
   title: 'Physical AI & Humanoid Robotics Textbook',
   tagline: 'Embodied Intelligence for the Future',
-  url: 'https://github.com/SyedaFatimaNoor/Physical-AI-Humanoid-Robotics', // replace with actual repo URL
+  url: 'https://physical-ai-humanoid-robotics.vercel.app',
   baseUrl: '/',
   organizationName: 'SyedaFatimaNoor', // GitHub org/user name.
   projectName: 'Physical-AI-Humanoid-Robotics', // repo name.
