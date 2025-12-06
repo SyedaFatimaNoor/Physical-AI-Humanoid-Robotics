@@ -2,6 +2,9 @@
 import { Config } from '@docusaurus/types';
 import path from 'path';
 
+// Load environment variables
+const apiUrl = process.env.REACT_APP_API_URL || '';
+
 const config: Config = {
   title: 'Physical AI & Humanoid Robotics Textbook',
   tagline: 'Embodied Intelligence for the Future',
@@ -89,6 +92,9 @@ const config: Config = {
       respectPrefersColorScheme: false,
     },
     // Custom CSS for gradients and micro‑animations will be added in src/css/custom.css
+  },
+  customFields: {
+    apiUrl: apiUrl,
   },
   plugins: [],
 };

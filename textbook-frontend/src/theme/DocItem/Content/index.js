@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import Content from '@theme-original/DocItem/Content';
 import ReactMarkdown from 'react-markdown';
 import {useDoc} from '@docusaurus/plugin-content-docs/client';
+import API from '../../../config/api';
 
 import styles from './styles.module.css';
 
@@ -52,8 +53,7 @@ export default function ContentWrapper(props) {
         }
 
         try {
-            const endpoint =
-                mode === 'urdu' ? '/api/translate' : '/api/personalize';
+            const endpoint = mode === 'urdu' ? API.translate : API.personalize;
             const body = mode === 'urdu' ? { chapter: text, language: 'ur' } : { text, level: 'beginner' };
 
             const response = await fetch(endpoint, {
@@ -61,12 +61,17 @@ export default function ContentWrapper(props) {
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(body),
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
             setCustomContent(data.personalized_markdown || data.translated || '');
             setContentMode(mode);
         } catch (error) {
-            console.error(error);
-            alert('Failed to process content. Backend might be offline.');
+            console.error('API Error:', error);
+            alert('Failed to process content. Please make sure the backend is running at the configured URL.');
         } finally {
             setLoading(false);
         }

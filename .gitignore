@@ -3,10 +3,11 @@
 .env.local
 .env.*.local
 *.env
+!.env.example
 
 # API Keys
-.env.example
 rag-backend/.env
+textbook-frontend/.env.local
 
 # Python
 __pycache__/

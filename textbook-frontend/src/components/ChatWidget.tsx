@@ -1,7 +1,7 @@
 // src/components/ChatWidget.tsx
 import React, { useState, useEffect } from 'react';
-// Using native fetch instead of axios
-import './chat.css'; // We'll add minimal styling later
+import API from '../config/api';
+import './chat.css';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -39,16 +39,25 @@ const ChatWidget: React.FC = () => {
             const body = selectedText
                 ? { query: input || 'Explain this selection', selected_text: selectedText }
                 : { query: input };
-            const response = await fetch('/api/chat', {
+            const response = await fetch(API.chat, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
-            const assistantMsg: Message = { role: 'assistant', content: data.answer };
+            const assistantMsg: Message = { role: 'assistant', content: data.answer || 'No response received.' };
             setMessages((prev) => [...prev, assistantMsg]);
         } catch (err) {
-            const errMsg: Message = { role: 'assistant', content: 'Error: unable to get response.' };
+            console.error('Chat error:', err);
+            const errMsg: Message = { 
+                role: 'assistant', 
+                content: 'Failed to connect to the server. Please make sure the backend is running.' 
+            };
             setMessages((prev) => [...prev, errMsg]);
         } finally {
             setLoading(false);
