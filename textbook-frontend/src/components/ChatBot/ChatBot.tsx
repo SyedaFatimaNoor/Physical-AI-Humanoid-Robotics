@@ -48,10 +48,8 @@ export default function ChatBot() {
             // Use /api/chat matching the backend.
             // isSelection passes 'selected_text' in the body.
             const endpoint = '/api/chat';
-            // Use configured backend URL or default to localhost
-            const baseUrl = (typeof process !== 'undefined' && process.env.REACT_APP_API_URL)
-                ? process.env.REACT_APP_API_URL
-                : 'http://localhost:8000';
+            // Use relative path to leverage Vercel rewrites/proxy
+            const baseUrl = '';
 
             const body = isSelection
                 ? { query: message, selected_text: selectedText }

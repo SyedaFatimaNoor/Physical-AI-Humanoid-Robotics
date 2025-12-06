@@ -12,9 +12,7 @@ const PersonalizeButton = () => {
         const text = article.innerText;
 
         try {
-            const baseUrl = (typeof process !== 'undefined' && process.env.REACT_APP_API_URL)
-                ? process.env.REACT_APP_API_URL
-                : 'http://localhost:8000';
+            const baseUrl = '';
 
             const response = await fetch(`${baseUrl}/api/personalize`, {
                 method: 'POST',

@@ -3,10 +3,5 @@
     "framework": "docusaurus",
     "buildCommand": "npm run build",
     "outputDirectory": "build",
-    "rewrites": [
-        {
-            "source": "/api/:path*",
-            "destination": "https://physical-ai-rob-backend.vercel.app/api/:path*"
-        }
-    ]
+    "rewrites": []
 }
