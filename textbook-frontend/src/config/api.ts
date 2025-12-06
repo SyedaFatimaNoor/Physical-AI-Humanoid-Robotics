@@ -1,5 +1,17 @@
 // src/config/api.ts
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+// For Docusaurus, we need to handle environment variables differently
+// In browser context, use window.__RUNTIME_CONFIG__ or leave empty for relative paths
+
+const getApiBaseUrl = (): string => {
+    // Check if we're in browser and have a runtime config
+    if (typeof window !== 'undefined') {
+        // @ts-ignore
+        return window.__API_URL__ || '';
+    }
+    return '';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const getApiUrl = (endpoint: string): string => {
     // If API_BASE_URL is set, use it; otherwise use relative path

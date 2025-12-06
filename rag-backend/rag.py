@@ -106,13 +106,15 @@ else:
 async def _search(query: str, top_k: int = 5) -> List[Tuple[str, str]]:
     """Search Qdrant for the most similar chunks. Returns a list of (chunk_id, text)."""
     query_vec = await embed_text(query)
-    results = qdrant.search(
+    results = qdrant.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=query_vec,
+        query=query_vec,
         limit=top_k,
         with_payload=True,
     )
-    return [(hit.id, hit.payload["text"]) for hit in results]
+    # QdrantClient.query_points returns a QueryResponse with `.points`
+    points = getattr(results, "points", results)
+    return [(p.id, p.payload.get("text", "")) for p in points]
 
 
 async def get_answer(query: str, selected_text: str | None = None) -> str:
@@ -124,7 +126,7 @@ async def get_answer(query: str, selected_text: str | None = None) -> str:
         "You are an expert AI tutor for the Physical AI & Humanoid Robotics textbook. "
         "Your goal is to provide clear, comprehensive, and educational responses that help students learn effectively.\n\n"
         "Guidelines for your responses:\n"
-        "1. Use ONLY the provided textbook context to answer questions\n"
+        "1. Use ONLY the provided textbook conztext to answer questions\n"
         "2. Structure your answers with clear headings and bullet points when appropriate\n"
         "3. Provide practical examples and real-world applications when possible\n"
         "4. Explain technical concepts in an accessible way for learners\n"

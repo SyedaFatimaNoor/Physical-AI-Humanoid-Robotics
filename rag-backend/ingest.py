@@ -13,6 +13,10 @@ QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 COLLECTION_NAME = "textbook_chunks"
 DOCS_DIR = "../textbook-frontend/docs"
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openrouter").lower()
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_EMBED_MODEL = os.getenv("OPENROUTER_EMBED_MODEL", "text-embedding-3-small")
+VECTOR_SIZE = 1536 if (LLM_PROVIDER == "openrouter" and OPENROUTER_API_KEY) else 768
 
 # Initialize clients
 if GEMINI_API_KEY:
@@ -23,18 +27,33 @@ if QDRANT_URL and QDRANT_API_KEY:
     qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 def get_embedding(text: str) -> List[float]:
-    """Generate embedding for text using Gemini"""
-    if not GEMINI_API_KEY:
-        print("Warning: No Gemini API key, using mock embeddings")
-        return [0.0] * 768
-    
-    result = genai.embed_content(
-        model="models/text-embedding-004",
-        content=text,
-        task_type="retrieval_document",
-        title="Textbook chunk"
-    )
-    return result['embedding']
+    """Generate embedding for text using configured provider"""
+    # Prefer OpenRouter if configured
+    if LLM_PROVIDER == "openrouter" and OPENROUTER_API_KEY:
+        try:
+            from openai import OpenAI
+            client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=OPENROUTER_API_KEY)
+            resp = client.embeddings.create(model=OPENROUTER_EMBED_MODEL, input=text)
+            return resp.data[0].embedding
+        except Exception as e:
+            print(f"Warning: OpenRouter embedding failed, falling back to mock. {e}")
+            return [0.0] * VECTOR_SIZE
+    # Use Gemini if key present
+    if GEMINI_API_KEY:
+        try:
+            result = genai.embed_content(
+                model="models/text-embedding-004",
+                content=text,
+                task_type="retrieval_document",
+                title="Textbook chunk"
+            )
+            return result['embedding']
+        except Exception as e:
+            print(f"Warning: Gemini embedding failed, falling back to mock. {e}")
+            return [0.0] * VECTOR_SIZE
+    # Fallback
+    print("Warning: No embedding API key, using mock embeddings")
+    return [0.0] * VECTOR_SIZE
 
 def chunk_text(text: str, chunk_size: int = 500, overlap: int = 100) -> List[str]:
     """Split text into overlapping chunks"""
@@ -132,7 +151,7 @@ def create_collection():
         # Create new collection
         qdrant_client.create_collection(
             collection_name=COLLECTION_NAME,
-            vectors_config=VectorParams(size=768, distance=Distance.COSINE)
+            vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE)
         )
         print(f"Created collection: {COLLECTION_NAME}")
         return True

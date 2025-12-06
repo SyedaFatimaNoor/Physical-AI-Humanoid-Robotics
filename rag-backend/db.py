@@ -6,8 +6,10 @@ The Better Auth SDK will issue a JWT containing the user's email; we can use tha
 """
 import os
 import asyncpg
+from dotenv import load_dotenv
 from typing import Dict, Any
 
+load_dotenv()
 DATABASE_URL = os.getenv("NEON_DB_URL")
 
 async def _get_pool():

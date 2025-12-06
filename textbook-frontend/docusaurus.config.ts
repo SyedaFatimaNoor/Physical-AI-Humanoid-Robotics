@@ -96,7 +96,9 @@ const config: Config = {
   customFields: {
     apiUrl: apiUrl,
   },
-  plugins: [],
+  plugins: [
+    './plugins/inject-api-url.js',
+  ],
 };
 
 export default config;

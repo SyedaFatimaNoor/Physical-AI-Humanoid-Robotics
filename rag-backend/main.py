@@ -8,12 +8,10 @@ Here we expose `/api/chat` and `/api/translate` endpoints.
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from dotenv import load_dotenv
 import os
-
-# Import backend modules (will be created later)
+load_dotenv()
 from rag import get_answer
-from db import get_user_preferences, store_user_profile
-
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -70,14 +68,14 @@ from auth import User, create_user, authenticate_user
 
 @app.post("/api/signup")
 async def signup(user: User):
-    user_id = create_user(user)
+    user_id = await create_user(user)
     if not user_id:
         raise HTTPException(status_code=400, detail="User creation failed")
     return {"user_id": user_id}
 
 @app.post("/api/signin")
 async def signin(req: SignInRequest):
-    user = authenticate_user(req.email, req.password)
+    user = await authenticate_user(req.email, req.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return {"user": user}

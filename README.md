@@ -77,21 +77,42 @@ physical-ai-robotics/
 - **Backend** – Vercel Serverless will run the FastAPI app (`main.py`).
 - The GitHub Actions workflow (`.github/workflows/deploy.yml`) automatically creates preview URLs for every PR.
 
-### Environment Variables (set in Vercel or a `.env` file for local dev)
-```
+### Environment Variables
+
+#### Backend Environment Variables
+Create a `.env` file in `rag-backend/` directory:
+
+```bash
 LLM_PROVIDER=openrouter  # or 'gemini'
-OPENROUTER_API_KEY=...
+OPENROUTER_API_KEY=your_openrouter_api_key
 OPENROUTER_MODEL=openai/gpt-4o-mini
 OPENROUTER_EMBED_MODEL=text-embedding-3-small
-GEMINI_API_KEY=...
+GEMINI_API_KEY=your_gemini_api_key  # if using Gemini
 GEMINI_MODEL=gemini-1.5-flash
 GEMINI_EMBED_MODEL=text-embedding-004
-QDRANT_URL=...
-QDRANT_API_KEY=...
-NEON_DB_URL=...
-BETTER_AUTH_CLIENT_ID=...
-BETTER_AUTH_CLIENT_SECRET=...
+QDRANT_URL=your_qdrant_url
+QDRANT_API_KEY=your_qdrant_api_key
+NEON_DB_URL=your_neon_postgres_url
+BETTER_AUTH_CLIENT_ID=your_better_auth_client_id
+BETTER_AUTH_CLIENT_SECRET=your_better_auth_secret
 ```
+
+#### Frontend Environment Variables
+Create a `.env.local` file in `textbook-frontend/` directory:
+
+**For Local Development:**
+```bash
+REACT_APP_API_URL=http://localhost:8003
+```
+
+**For Production (Vercel):**
+- Leave `REACT_APP_API_URL` empty or unset to use relative paths
+- The Vercel deployment will automatically route `/api/*` requests to the backend
+
+#### Vercel Deployment
+Set these environment variables in your Vercel project settings:
+- All backend variables listed above
+- `REACT_APP_API_URL` should be left empty (uses relative paths)
 
 ### Submission Checklist
 - Public GitHub Repo Link
