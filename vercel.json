@@ -2,21 +2,25 @@
     "version": 2,
     "builds": [
         {
+            "src": "rag-backend/main.py",
+            "use": "@vercel/python"
+        },
+        {
             "src": "textbook-frontend/package.json",
             "use": "@vercel/static-build",
             "config": {
                 "distDir": "build"
             }
-        },
-        {
-            "src": "rag-backend/main.py",
-            "use": "@vercel/python"
         }
     ],
-    "rewrites": [
+    "routes": [
         {
-            "source": "/api/:path*",
-            "destination": "/api/:path*"
+            "src": "/api/(.*)",
+            "dest": "/rag-backend/main.py"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/textbook-frontend/$1"
         }
     ]
 }
