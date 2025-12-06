@@ -1,4 +1,4 @@
-import type {ReactNode} from 'react';
+import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
@@ -14,11 +14,7 @@ type Track = {
   tags: string[];
 };
 
-type OpsUpdate = {
-  label: string;
-  status: 'stable' | 'amber' | 'pulse';
-  detail: string;
-};
+
 
 const sprintOutline = [
   {
@@ -63,24 +59,6 @@ const pathways: Track[] = [
 
 const trustBadges = ['DeepTech Fellows', 'Autonomy Guild', 'Frontier Robotics', 'Atlas Lab Network'];
 
-const opsFeed: OpsUpdate[] = [
-  {
-    label: 'Control stack',
-    status: 'stable',
-    detail: 'Loop jitter < 18ms after ROS 2 QoS tuning',
-  },
-  {
-    label: 'RAG tutor',
-    status: 'pulse',
-    detail: '32 curated notebooks online • 0.8s latency',
-  },
-  {
-    label: 'Hardware rig',
-    status: 'amber',
-    detail: 'Unitree G1 bay booked • Sat 09:00 UTC',
-  },
-];
-
 const releaseHighlights = [
   {
     title: 'Module 1 · Robotic Nervous System',
@@ -100,7 +78,7 @@ const releaseHighlights = [
 ];
 
 function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
   return (
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className={styles.heroBackdrop} aria-hidden="true" />
@@ -199,27 +177,7 @@ function HomepageHeader() {
                 </div>
               </div>
             </div>
-            <div className={styles.opsCard}>
-              <header>
-                <span>Ops console</span>
-                <span>Realtime</span>
-              </header>
-              <ul>
-                {opsFeed.map((update) => (
-                  <li key={update.label}>
-                    <div>
-                      <strong>{update.label}</strong>
-                      <small>{update.detail}</small>
-                    </div>
-                    <span data-tone={update.status}>
-                      {update.status === 'stable' && 'Stable'}
-                      {update.status === 'amber' && 'Booked'}
-                      {update.status === 'pulse' && 'Online'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+
           </div>
         </div>
       </div>
@@ -228,7 +186,7 @@ function HomepageHeader() {
 }
 
 export default function Home(): ReactNode {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
   const metaDescription =
     'Design embodied intelligence systems with a polished, end-to-end robotics curriculum.';
 
